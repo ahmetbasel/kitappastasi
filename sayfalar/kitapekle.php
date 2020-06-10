@@ -76,7 +76,7 @@ else if(isset($_REQUEST['op']) && strtoupper($_REQUEST['op'])==strtoupper("Kayde
 	$KITAP_DURUMU					= $_REQUEST["KITAP_DURUMU"];	 	
 	$KITAP_BAGISCI					= $_REQUEST["KITAP_BAGISCI"];	 	
 	$OLUSTURAN = $_SESSION['username'];
-	 
+
 	 if ($KITAP_ID!=null){
      $sql = "UPDATE KITAPLAR set KITAP_ADI='$KITAP_ADI',KITAP_RAFID='$KITAP_RAFID',KITAP_YAZARID='$KITAP_YAZARID',KITAP_BASIMEVIID='$KITAP_BASIMEVIID',KITAP_KATEGORIID='$KITAP_KATEGORIID',
 	 KITAP_BASIMYILI='$KITAP_BASIMYILI',KITAP_BARKOD='$KITAP_BARKOD', KITAP_EDINIM='$KITAP_EDINIM' WHERE ID=".$KITAP_ID;
@@ -191,7 +191,7 @@ include '../tasarim/ustalan.php';
 						<div class="col-lg-12">
 							<div class="row">
 								<div class="col-xs-12">
-									<form id="form1" >	
+									<form id="form1">	
 										<div class="box-header">
 											<button type="reset" id="btnYeni" name="Yeni" onclick = "" class="btn btn-primary"><span class="fa fa-file-text-o fa-2x"></span> Yeni</button>
 											<button type="button" id="btnKaydet" name="Kaydet"  class="btn btn-warning"><span class="fa fa-save fa-2x"></span> Kaydet</button>
@@ -199,7 +199,21 @@ include '../tasarim/ustalan.php';
 										</div>
 										<input type="text" name="ID" id="ID" class="form-control hidden"  placeholder="ID"  >
 										
-										
+										<?php 
+														$sql = "select max(id) as sonid from kitaplar";
+														if ($pdo->query($sql) == false) {
+														  $result  = 'error';
+														  $message = 'query error';
+														} else {
+														  $result  = 'success';
+														  $message = 'query success';
+														$st = $pdo->prepare($sql);
+														$st->execute();
+														$mysql_data 		= $st->fetch(PDO::FETCH_ASSOC);
+														$sonid				= $mysql_data['sonid'];
+														}
+															echo "<input type=\"text\" class=\"form-control hidden\" name=\"sonid\"  id=\"sonid\" value=\"".$sonid."\" readonly>";
+														?>
 										<div class="row" style="margin-top:10px">	
 											<div class="col-sm-3"	>
 												<div class="form-group has-success">
@@ -210,7 +224,6 @@ include '../tasarim/ustalan.php';
 											<div class="col-sm-3"	>
 												<div class="form-group has-success">
 													<h4> <span class="label label-primary">Yazarı</span></h4>
-													<!--<input type="text" class="form-control" name="YayıneviSEHIR" id="YayıneviSEHIR"/>-->
 														<?php
 															$smt = $pdo->prepare('SELECT * FROM YAZARLAR order by id');
 															$smt->execute();
@@ -224,21 +237,20 @@ include '../tasarim/ustalan.php';
 														</select>
 												</div>
 											</div>
-											<script>
+												<script>
 													$(document).ready(function () {
 														$("#DIV_TEMIN").hide();
 													});
 												</script>
 												<script>
-											
-											function gosterbagisci() {
-											  var x = document.getElementById("KITAP_EDINIM").value;
-											  if (x=="BAGIS")
-												  $("#DIV_TEMIN").show();
-											  else if(x=="SATINALMA")
-												  $("#DIV_TEMIN").hide();												  
-											}
-											</script>
+												function gosterbagisci() {
+												  var x = document.getElementById("KITAP_EDINIM").value;
+												  if (x=="BAGIS")
+													  $("#DIV_TEMIN").show();
+												  else if(x=="SATINALMA")
+													  $("#DIV_TEMIN").hide();												  
+												}
+												</script>
 											<div class="col-sm-3" >
 												<div class="form-group has-success" class="col-sm-6" >
 													<h4> <span class="label label-primary" size="6">TEMİN TÜRÜ</span></h4>	
@@ -249,8 +261,6 @@ include '../tasarim/ustalan.php';
 													</select>
 												</div>													
 											</div>	
-											
-											
 											<div class="row" style="margin-top:10px" id="DIV_TEMIN">	
 											<div class="col-sm-3"	>
 												<div class="form-group has-success">
@@ -269,14 +279,6 @@ include '../tasarim/ustalan.php';
 												</div>
 											</div>
 										</div>
-											
-											
-											
-											
-											
-											
-											
-											
 										</div>
 										<div class="row" style="margin-top:10px">	
 											<div class="col-sm-3"	>
@@ -302,13 +304,13 @@ include '../tasarim/ustalan.php';
 													<h4> <span class="label label-primary">RAF</span></h4>
 														<?php
 															$smt = $pdo->prepare('select COUNT(kitaplar.kitap_adi) as dolulukorani, raflar.seri as seri,raflar.id as id, raflar.kapasite as kapasite from kitaplar 
-left JOIN raflar on kitaplar.kitap_rafid = raflar.id
-group by kitaplar.kitap_rafid
-HAVING dolulukorani < raflar.kapasite');
+																					left JOIN raflar on kitaplar.kitap_rafid = raflar.id
+																					group by kitaplar.kitap_rafid
+																					HAVING dolulukorani < raflar.kapasite');
 															$smt->execute();
 															$data = $smt->fetchAll();
 														?>
-														<select name="KITAP_RAFID" id="KITAP_RAFID" class="form-control">
+														<select name="KITAP_RAFID" id="KITAP_RAFID" class="form-control" onchange="barkodUret();">
 															<option value="0">- Select -</option>
 															<?php foreach ($data as $row): ?>
 																<option value="<?=$row["id"]?>" ><?=$row["seri"]?></option>
@@ -316,9 +318,7 @@ HAVING dolulukorani < raflar.kapasite');
 														</select>
 												</div>
 											</div>
-											
-
-											<div class="col-sm-3"	>
+											<div class="col-sm-3">
 												<div class="form-group has-success">
 													<h4> <span class="label label-primary">KATEGORİ</span></h4>
 														<?php
@@ -326,7 +326,7 @@ HAVING dolulukorani < raflar.kapasite');
 															$smt->execute();
 															$data = $smt->fetchAll();
 														?>
-														<select name="KITAP_KATEGORIID" id="KITAP_KATEGORIID" class="form-control">
+														<select name="KITAP_KATEGORIID" id="KITAP_KATEGORIID" class="form-control" onchange="barkodUret();">
 															<option value="0">- Select -</option>
 															<?php foreach ($data as $row): ?>
 																<option value="<?=$row["id"]?>" ><?=$row["isim"]?></option>
@@ -339,7 +339,7 @@ HAVING dolulukorani < raflar.kapasite');
 											<div class="col-sm-3"	>
 												<div class="form-group has-success">
 													<h4> <span class="label label-primary">BARKODU</span></h4>	
-													<input type="text" class="form-control" name="KITAP_BARKOD" id="KITAP_BARKOD" required />
+													<input type="text" class="form-control" name="KITAP_BARKOD" id="KITAP_BARKOD" class="danger" readonly />
 												</div>
 											</div>
 										</div>
@@ -403,7 +403,27 @@ HAVING dolulukorani < raflar.kapasite');
 										});
 									});	
 								</script>
-								
+								<script language="javascript" type="text/javascript">
+								function barkodUret() {
+									document.getElementById("KITAP_BARKOD").value =null;
+									if (document.getElementById("KITAP_RAFID").value != 0 && document.getElementById("KITAP_KATEGORIID").value != 0)
+									{
+									var dizi = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+									var uzunluk = 8;
+									var barkodUret = '';
+									for (var i=0; i<uzunluk; i++) {
+										var rnum = Math.floor(Math.random() * dizi.length);
+										barkodUret += dizi.substring(rnum,rnum+1);
+									}
+									var gelensondeger = Number(document.getElementById("sonid").value);
+									var sonartibir=Number(gelensondeger + 1);
+									document.getElementById("KITAP_BARKOD").value = $("#KITAP_RAFID option:selected").html() + '-' + ($("#KITAP_KATEGORIID option:selected").html()).substring(0,3) +'-'+ sonartibir  + '-'  +barkodUret;
+									}
+									else {
+										
+									}
+								}
+								</script>
 								
 								<div id="page_container" class="col-lg-12">
 									<h3>Yayınevi Listesi</h3>
@@ -566,6 +586,31 @@ HAVING dolulukorani < raflar.kapasite');
     });   
  
 															  $("#btnKaydet").click(function (event) {
+																
+																//
+																var _barkod = document.forms["form1"]["KITAP_BARKOD"].value;
+																var _basimevi = document.forms["form1"]["KITAP_BASIMEVIID"].value;
+																var _yazarid = document.forms["form1"]["KITAP_YAZARID"].value;
+																var _adi = document.forms["form1"]["KITAP_ADI"].value;
+																if (_barkod == "" || _basimevi == 0 || _yazarid == 0 || _adi == "" ) {
+																	alert ("Lütfen Zorunlu Alanları Doldurunuz.");
+																	if (_barkod=="")
+																	{document.getElementById("KITAP_BARKOD").style.borderColor="red";}
+																	else{}
+																	if (_adi=="")
+																	{document.getElementById("KITAP_ADI").style.borderColor="red";	}
+																	else {}
+																	if (_basimevi == 0)
+																	{document.getElementById("KITAP_BASIMEVIID").style.borderColor="red";}
+																	else {}
+																	if (_yazarid == 0)
+																	{document.getElementById("KITAP_YAZARID").style.borderColor="red";	}
+																	else {}
+																	
+																  return false;
+																}
+																
+																else{
 																var mesaj = "";
 																var tablex = $('#table_KITAPLAR').DataTable();
 																event.preventDefault();
@@ -586,6 +631,10 @@ HAVING dolulukorani < raflar.kapasite');
 																						
 																								 $.unblockUI;
 																									alert('Kaydedildi.');
+																									document.getElementById("KITAP_YAZARID").style.borderColor="";
+																									document.getElementById("KITAP_BASIMEVIID").style.borderColor="";
+																									document.getElementById("KITAP_ADI").style.borderColor="";
+																									document.getElementById("KITAP_BARKOD").style.borderColor="";
 																									$(form1.reset());
 																									
 																					},
@@ -598,6 +647,7 @@ HAVING dolulukorani < raflar.kapasite');
 																						
 																				}
 																		});//ajax
+															  }
 																});   
 
 </script>
